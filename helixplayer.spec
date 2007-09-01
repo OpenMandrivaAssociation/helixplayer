@@ -1,5 +1,5 @@
 %define name	helixplayer
-%define version	1.0.8
+%define version	1.0.9
 %define release	%mkrel 1
 
 Name:		%{name}
@@ -7,11 +7,11 @@ Version:	%{version}
 Release:	%{release}
 Summary:	A multimedia player
 Source0:	https://helixcommunity.org/download.php/1950/hxplay-%version-source.tar.bz2
-Patch0:		helixplayer-1.0.5-fix-include.patch.bz2
+Patch0:		helixplayer-1.0.5-fix-include.patch
 # imported from fedora
-Patch1:		HelixPlayer-1.0.3-disable-asm.patch.bz2
-Patch2:		helixplayer-1.0.5-gcc4-detection-fix.patch.bz2
-Patch3:		helixplayer-1.0.8-nptl.patch.bz2
+Patch1:		HelixPlayer-1.0.3-disable-asm.patch
+Patch2:		helixplayer-1.0.5-gcc4-detection-fix.patch
+Patch3:		helixplayer-1.0.8-nptl.patch
 License:	GPL
 Group:		Video
 Url:		http://www.helixcommunity.org
@@ -154,17 +154,6 @@ install -m644 share/icons/hxplay_48x48.png -D $RPM_BUILD_ROOT%{_liconsdir}/%{nam
 
 popd
 
-# menu entries
-mkdir -p  $RPM_BUILD_ROOT%{_menudir}
-cat << EOF > $RPM_BUILD_ROOT%{_menudir}/%{name}
-?package(%{name}):command="/usr/bin/hxplay" \
-icon="helixplayer.png" needs="X11"\
-section="Multimedia/Video" startup_notify="false" \
-title="HelixPlayer" longtitle="A multimedia player" \
-mimetypes="application/x-ogg,application/ogg,text/vnd.rn-realtext,image/vnd.rn-realpix,application/smil,application/streamingmedia,application/sdp,video/3gpp,video/3gpp-encrypted,audio/3gpp,audio/3gpp-encrypted,audio/amr,audio/amr-encrypted,audio/amr-wb,audio/amr-wb-encrypted,audio/x-rn-3gpp-amr,audio/x-rn-3gpp-amr-encrypted,audio/x-rn-3gpp-amr-wb,audio/x-rn-3gpp-amr-wb-encrypted,video/3gpp2,audio/3gpp2" accept_url="true" \
-multiple_files="true" xdg="true"
-EOF
-
 mkdir -p $RPM_BUILD_ROOT%{_datadir}/applications
 cat > $RPM_BUILD_ROOT%{_datadir}/applications/mandriva-%{name}.desktop << EOF
 [Desktop Entry]
@@ -242,7 +231,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/hxplay
 
 #menu stuff
-%{_menudir}/%{name}
 %{_miconsdir}/%{name}.png
 %{_iconsdir}/%{name}.png
 %{_liconsdir}/%{name}.png
