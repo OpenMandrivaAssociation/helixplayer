@@ -28,6 +28,7 @@ BuildRequires: 	X11-devel
 BuildRequires:  libvorbis-devel
 BuildRequires:  python
 BuildRequires:	desktop-file-utils
+BuildRequires:	prelink
 Requires:	helixplayer-codecs = %{version}
 Requires(post): desktop-file-utils
 Requires(postun): desktop-file-utils
