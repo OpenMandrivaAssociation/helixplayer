@@ -157,9 +157,9 @@ for SIZE in "16x16" "32x32" "48x48" "128x128" "192x192" ; do
 done
 
 # Hack to get rid of executable stack on shared object files
-execstack -c %{buildroot}/%{_libdir}/helix/codecs/colorcvt.so
-execstack -c %{buildroot}/%{_libdir}/helix/codecs/cvt1.so
-execstack -c %{buildroot}/%{_libdir}/helix/plugins/vidsite.so
+#execstack -c %{buildroot}/%{_libdir}/helix/codecs/colorcvt.so
+#execstack -c %{buildroot}/%{_libdir}/helix/codecs/cvt1.so
+#execstack -c %{buildroot}/%{_libdir}/helix/plugins/vidsite.so
 
 chmod -x %{buildroot}/%{_datadir}/application-registry/hxplay.applications
 chmod -x %{buildroot}/%{_datadir}/mime-info/hxplay.mime
