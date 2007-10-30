@@ -7,11 +7,14 @@ Version:	%{version}
 Release:	%{release}
 Summary:	A multimedia player
 Source0:	https://helixcommunity.org/download.php/1950/hxplay-%version-source.tar.bz2
-Patch0:		helixplayer-1.0.5-fix-include.patch
+Source1:	HelixPlayer-buildrc
 # imported from fedora
+Patch0:		HelixPlayer-1.0.beta20040615-cvs-no-update.patch
 Patch1:		HelixPlayer-1.0.3-disable-asm.patch
-Patch2:		helixplayer-1.0.5-gcc4-detection-fix.patch
-Patch3:		helixplayer-1.0.8-nptl.patch
+Patch2:		HelixPlayer-1.0.4-nptl.patch
+Patch3:		HelixPlayer-1.0.5-missing-header.patch
+Patch4:		HelixPlayer-1.0.7-ogg.patch
+# imported from fedora
 License:	GPL
 Group:		Video
 Url:		http://www.helixcommunity.org
@@ -51,152 +54,115 @@ Codecs pack for %{name}
 
 %prep
 %setup -q -n hxplay-%version
-%patch0
+%patch0 -p1
 %patch1 -p1
-%patch2
-%patch3 -p0
+%patch2 -p1
+%patch3 -p1
+%patch4 -p0
+
 %build
-echo 'SetSDKPath("oggvorbissdk", "/usr")' > buildrc
+# Change hxplay_gtk_release to whatever string is in the Makefile
+BUILDRC=%{SOURCE1} BUILD_ROOT="`pwd`/build" \
+	PATH="$PATH:$$BUILD_ROOT/bin" \
+	python build/bin/build.py -v -t release -k -y \
+	%{_smp_mflags} -m hxplay_gtk_release \
+	-p green -P helix-client-all-defines-free \
+	player_all 
 
-export BUILD_ROOT=$PWD/build
-export BUILDRC=$PWD/buildrc
-export PATH="$BUILD_ROOT/bin;$PATH"
-python $PWD/build/bin/build.py -m hxplay_gtk_release -P helix-client-all-defines-free  player_all
-
-#%make
-
-# for the %doc section.
-cp ./player/installer/archive/temp/{README,LICENSE} ./
+chmod -x build/*.txt
 
 %install
 rm -rf $RPM_BUILD_ROOT
 
-# this build system leave the program in: 
-# %buildroot/player/installer/archive/temp
+mkdir -p %{buildroot}/%{_bindir}
 
-# preparing directory structure
-install -d -m 755 $RPM_BUILD_ROOT%{_bindir}
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/plugins
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/lib
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/default
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/hxplay
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/common
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/codecs
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/locale
-install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/locale
-
-# Let's go !
-
-# since all that we want to install is in this directory ...
-pushd player/installer/archive/temp
-
-# install and correct the .mo, populate the %name.lang with locale files
-rm -f  ../../../../%name.lang
-cd share/locale
-for i in *; do \
-( install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/locale/$i; \
-  install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/locale/$i
-  install -d -m 755 $RPM_BUILD_ROOT%{_datadir}/locale/$i/LC_MESSAGES ; \
-  install -m 644 $i/*.mo -D $RPM_BUILD_ROOT%{_datadir}/locale/$i/LC_MESSAGES ;\
-  mv $RPM_BUILD_ROOT%{_datadir}/locale/$i/LC_MESSAGES/player.mo $RPM_BUILD_ROOT%{_datadir}/locale/$i/LC_MESSAGES/hxplay.mo ; \
-  mv $RPM_BUILD_ROOT%{_datadir}/locale/$i/LC_MESSAGES/widget.mo $RPM_BUILD_ROOT%{_datadir}/locale/$i/LC_MESSAGES/libgtkhx.mo; \
-  if [ -f $i/README ]; then \
-	install -m 644 $i/README $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/locale/$i/README ; \
-	echo "%{_libdir}/%{name}-%{version}/share/locale/$i/README" >> ../../../../../../%name.lang ; \
-  fi; \
-  if [ -f $i/LICENSE ]; then \
-	install -m 644 $i/LICENSE $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/locale/$i/LICENSE ; \
-	echo "%{_libdir}/%{name}-%{version}/share/locale/$i/LICENSE" >> ../../../../../../%name.lang ; \
-  fi; \
-  echo "%dir %{_libdir}/%{name}-%{version}/share/locale/$i" >> ../../../../../../%name.lang; )
-done
-
-cd ../..
-
-# get locale
-%find_lang hxplay
-%find_lang libgtkhx
-# add locale files to dir.
-cat hxplay.lang libgtkhx.lang >> ../../../../%name.lang
-
-# Set the HELIX_LIBS var in the script:
-
-perl -pi -e 's|# HELIX_LIBS="/usr/local/HelixPlayer"|HELIX_LIBS=%{_libdir}/%{name}-%{version}|' hxplay
-
-install -m755 {hxplay.bin,hxplay} -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}
-install -m755 lib/libgtkhx.so -D  $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/lib/libgtkhx.so
-install -m755 plugins/*.so -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/plugins
-install -m755 common/*.so -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/common
-install -m644 share/hxplay/*.png -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/hxplay
-install -m644 share/default/*.png -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/share/default
-
-
-# Create the link in %{_bindir} ( hxplay binary must be in his directory with 
-# plugin and ressources
-ln -s %{_libdir}/%{name}-%{version}/hxplay $RPM_BUILD_ROOT%{_bindir}/hxplay
-
-# mozilla plugin
-install -d -m 755 $RPM_BUILD_ROOT%{_libdir}/mozilla/plugins
-install -m755 mozilla/* -D $RPM_BUILD_ROOT%{_libdir}/mozilla/plugins
-
-# codecs
-install -m755 codecs/*.so -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/codecs
-install -m755 plugins/*.so -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/plugins
-install -m755 common/*.so -D $RPM_BUILD_ROOT%{_libdir}/%{name}-%{version}/common
-
-
-# Menu icons
-install -m644 share/icons/hxplay_16x16.png -D $RPM_BUILD_ROOT%{_miconsdir}/%{name}.png
-install -m644 share/icons/hxplay_32x32.png -D $RPM_BUILD_ROOT%{_iconsdir}/%{name}.png
-install -m644 share/icons/hxplay_48x48.png -D $RPM_BUILD_ROOT%{_liconsdir}/%{name}.png
-
-popd
-
-mkdir -p $RPM_BUILD_ROOT%{_datadir}/applications
-cat > $RPM_BUILD_ROOT%{_datadir}/applications/mandriva-%{name}.desktop << EOF
-[Desktop Entry]
-Name=HelixPlayer
-Comment=HelixPlayer multimedia player
-Exec=%{_bindir}/hxplay %U
-Icon=%{name}
-Terminal=false
-Type=Application
-Categories=GTK;AudioVideo;Audio;Video;Player;X-MandrivaLinux-Multimedia-Video;
-MimeType=application/x-ogg;application/ogg;audio/mp3;audio/x-mp3;audio/mpeg;audio/mpg;audio/x-mpeg;audio/x-mpg;audio/mpegurl;audio/x-mpegurl;audio/wav;audio/x-wav;audio/x-pn-wav;audio/x-pn-windows-acm;audio/x-pn-windowspcm;text/vnd.rn-realtext;application/vnd.rn-realmedia-secure;application/vnd.rn-realaudio-secure;audio/x-realaudio-secure;video/vnd.rn-realvideo-secure;audio/vnd.rn-realaudio;audio/x-realaudio;application/vnd.rn-realmedia;application/vnd.rn-realmedia-vbr;image/vnd.rn-realpix;audio/x-pn-realaudio;video/vnd.rn-realvideo;application/vnd.rn-realsystem-rmj;application/vnd.rn-realsystem-rmx;audio/aac;audio/x-aac;audio/m4a;audio/x-m4a;audio/mp2;audio/x-mp2;audio/mp1;audio/x-mp1;audio/rn-mpeg;audio/scpls;audio/x-scpls;application/smil;application/x-smil;application/streamingmedia;application/x-streamingmedia;application/sdp;audio/basic;audio/x-pn-au;audio/aiff;audio/x-aiff;audio/x-pn-aiff;video/3gpp;video/3gpp-encrypted;audio/3gpp;audio/3gpp-encrypted;audio/amr;audio/amr-encrypted;audio/amr-wb;audio/amr-wb-encrypted;audio/x-rn-3gpp-amr;audio/x-rn-3gpp-amr-encrypted;audio/x-rn-3gpp-amr-wb;audio/x-rn-3gpp-amr-wb-encrypted;video/3gpp2;audio/x-3gpp2
+cat > %{buildroot}/%{_bindir}/hxplay <<EOF
+#!/bin/sh
+HELIX_LIBS=%{_libdir}/helix
+export HELIX_LIBS
+exec %{_bindir}/hxplay.bin "\$@"
 EOF
 
+install -p -m 755 release/hxplay.bin %{buildroot}/%{_bindir}/
+chmod a+x %{buildroot}/%{_bindir}/*
 
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/mime-info/
-cp player/installer/common/hxplay.keys $RPM_BUILD_ROOT/%{_datadir}/mime-info
-cp player/installer/common/hxplay.mime $RPM_BUILD_ROOT/%{_datadir}/mime-info
+mkdir -p %{buildroot}/%{_libdir}/helix/common
+install -p -m 755 player/installer/archive/temp/common/*.so %{buildroot}/%{_libdir}/helix/common/
+mkdir -p %{buildroot}/%{_libdir}/helix/plugins
+install -p -m 755 player/installer/archive/temp/plugins/*.so %{buildroot}/%{_libdir}/helix/plugins/
 
-mkdir -p $RPM_BUILD_ROOT/%{_datadir}/application-registry/
-cp player/installer/common/hxplay.applications $RPM_BUILD_ROOT/%{_datadir}/application-registry/
+mkdir -p %{buildroot}/%{_libdir}/helix
+install -p -m 644 player/installer/archive/temp/LICENSE %{buildroot}/%{_libdir}/helix/
+install -p -m 644 player/installer/archive/temp/README %{buildroot}/%{_libdir}/helix/
+(cd %{buildroot}/%{_docdir}/%{name}-%{version} && ln -s %{_libdir/helix} .)
 
+mkdir -p %{buildroot}/%{_libdir}/helix/codecs
+install -p -m 755 player/installer/archive/temp/codecs/*.so %{buildroot}/%{_libdir}/helix/codecs/
+mkdir -p %{buildroot}/%{_libdir}/mozilla/plugins
+install -p -m 755 player/installer/archive/temp/mozilla/nphelix.so %{buildroot}/%{_libdir}/mozilla/plugins/
+install -p -m 644 player/installer/archive/temp/mozilla/nphelix.xpt %{buildroot}/%{_libdir}/mozilla/plugins
+mkdir -p %{buildroot}/%{_datadir}/application-registry/
+install -p -m 644 player/installer/common/hxplay.applications %{buildroot}/%{_datadir}/application-registry/
+# Desktop file
+mkdir -p %{buildroot}/%{_datadir}/applications/
+cp -p player/installer/common/hxplay.desktop player/installer/common/realplay.desktop
+desktop-file-install  --vendor="" \
+        --dir %{buildroot}%{_datadir}/applications \
+        player/installer/common/realplay.desktop
+
+mkdir -p %{buildroot}/%{_datadir}/mime-info/
+install -p -m 644 player/installer/common/hxplay.keys %{buildroot}/%{_datadir}/mime-info/
+install -p -m 644 player/installer/common/hxplay.mime %{buildroot}/%{_datadir}/mime-info/
+
+mkdir -p %{buildroot}/%{_libdir}/helix/share/hxplay
+(cd %{buildroot}/%{_libdir}/helix/share/ && ln -s %{_datadir}/icons/hicolor/48x48/apps/hxplay.png .)
+install -p -m 644 player/app/gtk/res/default/*.png %{buildroot}/%{_libdir}/helix/share/hxplay/
+install -p -m 644 player/app/gtk/res/hxplay/*.png %{buildroot}/%{_libdir}/helix/share/hxplay/
+
+for LANGUAGE in "de" "es" "fr" "it" "ja" "ko" "pt_BR" "zh_CN" "zh_TW"; do
+	dir=%{buildroot}/%{_datadir}/locale/$LANGUAGE/LC_MESSAGES/
+	mkdir -p $dir
+	install -p -m 644 "player/installer/archive/temp/share/locale/$LANGUAGE/player.mo" "$dir/hxplay.mo"
+	install -p -m 644 "player/installer/archive/temp/share/locale/$LANGUAGE/widget.mo" "$dir/libgtkhx.mo"
+done
 
 for SIZE in "16x16" "32x32" "48x48" "128x128" "192x192" ; do
-    
-    ICON=player/app/gtk/res/icons/hxplay/hxplay_${SIZE}.png
-    if [ -f "$ICON" ] ; then
-        mkdir -p $RPM_BUILD_ROOT/%{_datadir}/icons/hicolor/${SIZE}/apps
-        cp "$ICON" $RPM_BUILD_ROOT/%{_datadir}/icons/hicolor/${SIZE}/apps/hxplay.png
-    fi
+	mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/$SIZE
+	mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/$SIZE/apps
+	mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/$SIZE/mimetypes
 
-    for MIME in \
-        "application-ram"     \
-        "application-rpm"     \
-        "application-rm"      \
-        "audio-ra"            \
-        "video-rv" ; do
-      ICON=player/app/gtk/res/icons/hxplay/mime-${MIME}_${SIZE}.png
-      if [ -f "$ICON" ] ; then
-          mkdir -p $RPM_BUILD_ROOT/%{_datadir}/icons/hicolor/${SIZE}/mimetypes
-          cp "$ICON" $RPM_BUILD_ROOT/%{_datadir}/icons/hicolor/${SIZE}/mimetypes/hxplay-${MIME}.png
-      fi
-    done
+	ICON=player/app/gtk/res/icons/hxplay/hxplay_${SIZE}.png
+	if [ -f "$ICON" ] ; then
+		mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/${SIZE}/apps
+		install -p -m 644 "$ICON" %{buildroot}/%{_datadir}/icons/hicolor/${SIZE}/apps/hxplay.png
+	fi
+
+	for MIME in \
+		"application-ram"     \
+		"application-rpm"     \
+		"application-rm"      \
+		"audio-ra"            \
+		"video-rv" ; do
+
+		ICON=player/app/gtk/res/icons/hxplay/mime-${MIME}_${SIZE}.png
+		if [ -f "$ICON" ] ; then
+			mkdir -p %{buildroot}/%{_datadir}/icons/hicolor/${SIZE}/mimetypes
+			install -p -m 644 "$ICON" %{buildroot}/%{_datadir}/icons/hicolor/${SIZE}/mimetypes/hxplay-${MIME}.png
+		fi
+	done
 done
+
+# Hack to get rid of executable stack on shared object files
+execstack -c %{buildroot}/%{_libdir}/helix/codecs/colorcvt.so
+execstack -c %{buildroot}/%{_libdir}/helix/codecs/cvt1.so
+execstack -c %{buildroot}/%{_libdir}/helix/plugins/vidsite.so
+
+chmod -x %{buildroot}/%{_datadir}/application-registry/hxplay.applications
+chmod -x %{buildroot}/%{_datadir}/mime-info/hxplay.mime
+chmod -x %{buildroot}/%{_libdir}/helix/LICENSE
+chmod -x %{buildroot}/%{_datadir}/mime-info/hxplay.keys
+
+%find_lang %{name} hxplay libgtkhx
 
 %post
 %{update_menus}
@@ -211,34 +177,16 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f %name.lang
 %defattr(-,root,root)
-%doc README LICENSE
-
-%dir %{_libdir}/%{name}-%{version}
-%dir %{_libdir}/%{name}-%{version}/share
-%dir %{_libdir}/%{name}-%{version}/lib
-%dir %{_libdir}/%{name}-%{version}/common
-%dir %{_libdir}/%{name}-%{version}/plugins
-%dir %{_libdir}/%{name}-%{version}/codecs
-%dir %{_libdir}/%{name}-%{version}/share/default
-%dir %{_libdir}/%{name}-%{version}/share/hxplay
-%dir %{_libdir}/%{name}-%{version}/share/locale
-
-%{_libdir}/%{name}-%{version}/hxplay
-%{_libdir}/%{name}-%{version}/hxplay.bin
-%{_libdir}/%{name}-%{version}/share/default/*
-%{_libdir}/%{name}-%{version}/share/hxplay/*
-%{_libdir}/%{name}-%{version}/lib/*
-%{_bindir}/hxplay
-
-#menu stuff
-%{_miconsdir}/%{name}.png
-%{_iconsdir}/%{name}.png
-%{_liconsdir}/%{name}.png
-%{_datadir}/applications/*.desktop
+%doc build/*.txt
+%{_bindir}/hxplay*
+%{_libdir}/helix
+%{_datadir}/icons/hicolor/*/*/*
 %{_datadir}/mime-info/*
-%{_datadir}/application-registry/*
-%{_datadir}/icons/hicolor/*/*/*.png
-
+%{_datadir}/applications/*.desktop
+%{_datadir}/application-registry/hxplay.applications
+%exclude %{_libdir}/helix/common
+%exclude %{_libdir}/helix/plugins
+%exclude %{_libdir}/helix/codecs
 
 # Mozilla plugin
 %files mozilla-plugin
@@ -248,6 +196,6 @@ rm -rf $RPM_BUILD_ROOT
 # Codecs
 %files helix-codecs
 %defattr(-,root,root)
-%{_libdir}/%{name}-%{version}/common/*
-%{_libdir}/%{name}-%{version}/plugins/*
-%{_libdir}/%{name}-%{version}/codecs/*
+%{_libdir}/helix/common
+%{_libdir}/helix/plugins
+%{_libdir}/helix/codecs
