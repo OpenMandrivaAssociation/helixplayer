@@ -15,6 +15,7 @@ Patch2:		HelixPlayer-1.0.4-nptl.patch
 Patch3:		HelixPlayer-1.0.5-missing-header.patch
 Patch4:		HelixPlayer-1.0.7-ogg.patch
 # imported from fedora
+Patch5:		hxplay-1.0.9-desktop-file.patch
 License:	GPL
 Group:		Video
 Url:		http://www.helixcommunity.org
@@ -26,6 +27,7 @@ BuildRequires:	libalsa-devel
 BuildRequires: 	X11-devel
 BuildRequires:  libvorbis-devel
 BuildRequires:  python
+BuildRequires:	desktop-file-utils
 Requires:	helixplayer-codecs = %{version}
 Requires(post): desktop-file-utils
 Requires(postun): desktop-file-utils
@@ -59,6 +61,7 @@ Codecs pack for %{name}
 %patch2 -p1
 %patch3 -p1
 %patch4 -p0
+%patch5 -p0
 
 %build
 # Change hxplay_gtk_release to whatever string is in the Makefile
@@ -108,7 +111,7 @@ mkdir -p %{buildroot}/%{_datadir}/applications/
 cp -p player/installer/common/hxplay.desktop player/installer/common/realplay.desktop
 desktop-file-install  --vendor="" \
         --dir %{buildroot}%{_datadir}/applications \
-        player/installer/common/realplay.desktop
+        player/installer/common/hxplay.desktop
 
 mkdir -p %{buildroot}/%{_datadir}/mime-info/
 install -p -m 644 player/installer/common/hxplay.keys %{buildroot}/%{_datadir}/mime-info/
