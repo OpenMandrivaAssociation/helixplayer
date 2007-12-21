@@ -19,6 +19,7 @@ Patch5:		hxplay-1.0.9-desktop-file.patch
 License:	GPL
 Group:		Video
 Url:		http://www.helixcommunity.org
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires:	libtheora-devel
 BuildRequires:	libogg-devel
 BuildRequires:	gtk+2-devel >= 2.2.0
