@@ -1,6 +1,6 @@
 %define name	helixplayer
 %define version	1.0.9
-%define release	%mkrel 1
+%define release	%mkrel 2
 
 Name:		%{name}
 Version:	%{version}
@@ -14,7 +14,6 @@ Patch1:		HelixPlayer-1.0.3-disable-asm.patch
 Patch2:		HelixPlayer-1.0.4-nptl.patch
 Patch3:		HelixPlayer-1.0.5-missing-header.patch
 Patch4:		HelixPlayer-1.0.7-ogg.patch
-# imported from fedora
 Patch5:		hxplay-1.0.9-desktop-file.patch
 License:	GPL
 Group:		Video
@@ -29,6 +28,7 @@ BuildRequires:  libvorbis-devel
 BuildRequires:  python
 BuildRequires:	desktop-file-utils
 BuildRequires:	prelink
+ExclusiveArch:	%{ix86}
 Requires:	helixplayer-codecs = %{version}
 Requires(post): desktop-file-utils
 Requires(postun): desktop-file-utils
@@ -43,7 +43,7 @@ Theora etc.
 Summary:	Mozilla plugin for %{name}
 Group:		Networking/WWW
 Requires:	%{name} == %{version}
-Requires:	mozilla-firefox
+
 %description mozilla-plugin
 Mozilla plugin for %{name}.
 
@@ -65,6 +65,11 @@ Codecs pack for %{name}
 %patch5 -p0
 
 %build
+# crowbar our optflags into the build. I HATE non-standrd buildsystems
+# - AdamW 2008/03
+sed -i -e 's.march=pentium .march=pentium %{optflags} .g' build/umakecf/*.cf
+sed -i -e 's.-D__amd64__.-D__amd64__ %{optflags}.g' build/umakecf/*.cf
+
 # Change hxplay_gtk_release to whatever string is in the Makefile
 BUILDRC=%{SOURCE1} BUILD_ROOT="`pwd`/build" \
 	PATH="$PATH:$$BUILD_ROOT/bin" \
