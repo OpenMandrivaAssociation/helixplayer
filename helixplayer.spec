@@ -1,6 +1,6 @@
 %define name	helixplayer
 %define version	1.0.9
-%define release	%mkrel 2
+%define release	%mkrel 3
 
 Name:		%{name}
 Version:	%{version}
@@ -52,6 +52,8 @@ Summary:	Codecs pack for %{name}
 Group:		Video
 Requires:	%{name}
 Provides:	helixplayer-codecs = %{version}
+Conflicts:	helixplayer-real-codecs < 1.0.9
+
 %description helix-codecs
 Codecs pack for %{name}
 
