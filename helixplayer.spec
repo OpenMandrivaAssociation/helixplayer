@@ -1,6 +1,6 @@
 %define name	helixplayer
 %define version	1.0.9
-%define release	%mkrel 5
+%define release	%mkrel 6
 
 Name:		%{name}
 Version:	%{version}
