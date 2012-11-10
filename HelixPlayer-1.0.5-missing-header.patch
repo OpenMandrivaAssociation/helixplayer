@@ -1,0 +1,10 @@
+--- hxplay-1.0.5/player/hxclientkit/src/CHXClientSiteSupplier.h.missing-header	2005-06-10 15:25:14.000000000 -0400
++++ hxplay-1.0.5/player/hxclientkit/src/CHXClientSiteSupplier.h	2005-06-10 15:25:45.000000000 -0400
+@@ -62,6 +62,7 @@
+ #include "exit_hx_headers.h"
+ 
+ #include "HXClientCallbacks.h"
++#include "CHXClientSite.h"
+ 
+ class CHXFlatArray;
+ _INTERFACE IHXPlayer;
